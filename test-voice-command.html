@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Commande Vocale</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .commands {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎤 Test de Commande Vocale</h1>
+        
+        <div id="status" class="status info">
+            Cliquez sur "Tester" pour vérifier la compatibilité
+        </div>
+
+        <button onclick="testBrowserSupport()">Tester la Compatibilité</button>
+        <button onclick="startListening()">Démarrer l'Écoute</button>
+        <button onclick="stopListening()">Arrêter l'Écoute</button>
+
+        <div class="commands">
+            <h3>Commandes à tester :</h3>
+            <ul>
+                <li><strong>"accueil"</strong> - Page d'accueil</li>
+                <li><strong>"cours"</strong> - Liste des cours</li>
+                <li><strong>"quiz"</strong> - Liste des quiz</li>
+                <li><strong>"dashboard"</strong> - Dashboard admin</li>
+                <li><strong>"générateur"</strong> - Générateur de quiz IA</li>
+            </ul>
+        </div>
+
+        <div id="transcript" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+            <strong>Transcription :</strong> <span id="transcriptText">Aucune</span>
+        </div>
+    </div>
+
+    <script>
+        let recognition = null;
+        let isListening = false;
+
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        function testBrowserSupport() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (SpeechRecognition) {
+                updateStatus('✅ Votre navigateur supporte la reconnaissance vocale !', 'success');
+                initRecognition();
+            } else {
+                updateStatus('❌ Votre navigateur ne supporte pas la reconnaissance vocale. Utilisez Chrome ou Edge.', 'error');
+            }
+        }
+
+        function initRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            
+            recognition.lang = 'fr-FR';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = () => {
+                isListening = true;
+                updateStatus('🎙️ Écoute en cours... Parlez maintenant !', 'info');
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript.toLowerCase().trim();
+                document.getElementById('transcriptText').textContent = transcript;
+                updateStatus(`✅ Commande reçue: "${transcript}"`, 'success');
+                
+                // Simuler la navigation
+                setTimeout(() => {
+                    processCommand(transcript);
+                }, 1000);
+            };
+
+            recognition.onerror = (event) => {
+                isListening = false;
+                let errorMsg = '';
+                switch (event.error) {
+                    case 'no-speech':
+                        errorMsg = '⚠️ Aucune parole détectée';
+                        break;
+                    case 'audio-capture':
+                        errorMsg = '⚠️ Microphone non disponible';
+                        break;
+                    case 'not-allowed':
+                        errorMsg = '⚠️ Permission microphone refusée';
+                        break;
+                    default:
+                        errorMsg = `⚠️ Erreur: ${event.error}`;
+                }
+                updateStatus(errorMsg, 'error');
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                if (!document.getElementById('status').textContent.includes('✅')) {
+                    updateStatus('🛑 Écoute terminée', 'info');
+                }
+            };
+        }
+
+        function startListening() {
+            if (!recognition) {
+                updateStatus('❌ Reconnaissance vocale non initialisée. Testez d\'abord la compatibilité.', 'error');
+                return;
+            }
+            
+            if (isListening) {
+                updateStatus('⚠️ Écoute déjà en cours', 'error');
+                return;
+            }
+            
+            recognition.start();
+        }
+
+        function stopListening() {
+            if (recognition && isListening) {
+                recognition.stop();
+            }
+        }
+
+        function processCommand(transcript) {
+            const commands = {
+                'accueil': 'Page d\'accueil (/)',
+                'home': 'Page d\'accueil (/)',
+                'cours': 'Liste des cours (/courses)',
+                'courses': 'Liste des cours (/courses)',
+                'quiz': 'Liste des quiz (/quizzes)',
+                'quizzes': 'Liste des quiz (/quizzes)',
+                'dashboard': 'Dashboard admin (/dashboard)',
+                'générateur': 'Générateur de quiz IA (/dashboard/ai/generator)',
+                'generator': 'Générateur de quiz IA (/dashboard/ai/generator)',
+                'feedback': 'Liste des feedbacks (/feedbacks)',
+                'événements': 'Liste des événements (/events)',
+                'events': 'Liste des événements (/events)',
+                'clubs': 'Liste des clubs (/clubs)'
+            };
+
+            let found = false;
+            for (const [keyword, description] of Object.entries(commands)) {
+                if (transcript.includes(keyword)) {
+                    updateStatus(`🎯 Navigation vers: ${description}`, 'success');
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                updateStatus(`❌ Commande "${transcript}" non reconnue. Essayez: quiz, cours, dashboard...`, 'error');
+            }
+        }
+
+        // Test automatique au chargement
+        window.onload = () => {
+            setTimeout(testBrowserSupport, 500);
+        };
+    </script>
+</body>
+</html>

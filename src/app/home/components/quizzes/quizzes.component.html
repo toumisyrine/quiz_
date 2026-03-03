@@ -1,0 +1,50 @@
+<section class="quizzes-section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-badge">📝 Test Your Knowledge</span>
+      <h2 class="section-title">Featured Quizzes</h2>
+      <p class="section-subtitle">Challenge yourself with our interactive quizzes</p>
+    </div>
+
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading quizzes...</p>
+    </div>
+
+    <div *ngIf="!loading && quizzes.length === 0" class="empty-state">
+      <i class="icon">📚</i>
+      <p>No quizzes available at the moment</p>
+    </div>
+
+    <div *ngIf="!loading && quizzes.length > 0" class="quizzes-grid">
+      <div class="quiz-card" *ngFor="let quiz of quizzes">
+        <div class="quiz-icon">
+          <i class="icon">📋</i>
+        </div>
+        <h3 class="quiz-title">{{ quiz.title }}</h3>
+        <p class="quiz-description">{{ quiz.description || 'Test your knowledge with this quiz' }}</p>
+        <div class="quiz-meta">
+          <span class="meta-item">
+            <i class="icon-small">❓</i>
+            {{ quiz.questionCount || 0 }} questions
+          </span>
+          <span class="meta-item" *ngIf="quiz.averageScore">
+            <i class="icon-small">📊</i>
+            {{ quiz.averageScore | number:'1.0-0' }}% avg
+          </span>
+        </div>
+        <button class="btn-take-quiz" (click)="takeQuiz(quiz.id!)">
+          Start Quiz
+          <i class="arrow">→</i>
+        </button>
+      </div>
+    </div>
+
+    <div class="section-footer">
+      <button class="btn-view-all" (click)="viewAllQuizzes()">
+        View All Quizzes
+        <i class="arrow">→</i>
+      </button>
+    </div>
+  </div>
+</section>
