@@ -697,7 +697,7 @@ export class FeedbackListComponent implements OnInit, OnDestroy {
   filteredFeedbacks: Feedback[] = [];
   loading = false;
   searchTerm = '';
-  filterRating: number | string = 0;
+  filterRating: string = '0';
   filterType = '';
   isAdminMode = false;
   
@@ -776,13 +776,13 @@ export class FeedbackListComponent implements OnInit, OnDestroy {
     }
 
     // Filtre par rating
-    if (this.filterRating && this.filterRating !== '0' && this.filterRating !== 0) {
+    if (this.filterRating && this.filterRating !== '0') {
       const rating = Number(this.filterRating);
       result = result.filter(f => f.rating === rating);
     }
 
     // Filtre par type
-    if (this.filterType) {
+    if (this.filterType && this.filterType !== '') {
       result = result.filter(f => f.type === this.filterType);
     }
 
@@ -792,7 +792,7 @@ export class FeedbackListComponent implements OnInit, OnDestroy {
   // Méthode supprimée: filterByRating() - remplacée par applyFilters() directement
 
   setRatingFilter(rating: number): void {
-    this.filterRating = rating;
+    this.filterRating = rating.toString();
     this.applyFilters();
   }
 

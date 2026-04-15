@@ -84,14 +84,14 @@
             <div class="rating-buttons">
               <button 
                 class="rating-btn" 
-                [class.active]="filterRating === 0"
+                [class.active]="filterRating === '0'"
                 (click)="setRatingFilter(0)">
                 All
               </button>
               <button 
                 *ngFor="let rating of [5,4,3,2,1]"
                 class="rating-btn" 
-                [class.active]="filterRating === rating"
+                [class.active]="filterRating === rating.toString()"
                 (click)="setRatingFilter(rating)">
                 <span class="rating-stars">
                   <i class="bi bi-star-fill" *ngFor="let star of getStarArray(rating)"></i>

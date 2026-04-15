@@ -216,6 +216,8 @@ export class KidsGameAiGeneratorComponent implements OnInit {
     this.saving = true;
     this.error = '';
 
+    console.log('🔍 DEBUG: Saving game with category:', this.selectedCategory);
+
     // Create kids game using the new service
     const gameData = {
       title: this.generatedGame.title,
@@ -224,10 +226,17 @@ export class KidsGameAiGeneratorComponent implements OnInit {
       status: 'PUBLISHED' as const
     };
 
+    console.log('🔍 DEBUG: Game data:', gameData);
+
     this.kidsGameService.createGame(gameData).subscribe({
       next: (createdGame) => {
-        // Add questions using the new service
-        const questionPromises = this.generatedGame.questions.map((q: any) => {
+        console.log('✅ Game created:', createdGame);
+        
+        // Add questions one by one
+        let savedQuestions = 0;
+        const totalQuestions = this.generatedGame.questions.length;
+        
+        this.generatedGame.questions.forEach((q: any, index: number) => {
           const questionData = {
             gameId: createdGame.id!,
             imageEmoji: q.imageEmoji,
@@ -235,22 +244,31 @@ export class KidsGameAiGeneratorComponent implements OnInit {
             options: q.options,
             points: q.points || 1
           };
-          return this.kidsGameService.createQuestion(questionData).toPromise();
-        });
-
-        Promise.all(questionPromises).then(() => {
-          this.saving = false;
-          alert('Jeu enregistré avec succès!');
-          this.router.navigate(['/dashboard/kids-games']);
-        }).catch((error: any) => {
-          console.error('Error saving questions:', error);
-          this.error = 'Erreur lors de l\'enregistrement des questions';
-          this.saving = false;
+          
+          console.log(`🔍 DEBUG: Saving question ${index + 1}:`, questionData);
+          
+          this.kidsGameService.createQuestion(questionData).subscribe({
+            next: (savedQuestion) => {
+              console.log(`✅ Question ${index + 1} saved:`, savedQuestion);
+              savedQuestions++;
+              
+              if (savedQuestions === totalQuestions) {
+                this.saving = false;
+                alert('Jeu enregistré avec succès!');
+                this.router.navigate(['/dashboard/kids-games']);
+              }
+            },
+            error: (error: any) => {
+              console.error(`❌ Error saving question ${index + 1}:`, error);
+              this.error = 'Erreur lors de l\'enregistrement des questions';
+              this.saving = false;
+            }
+          });
         });
       },
       error: (error: any) => {
-        console.error('Error saving game:', error);
-        this.error = 'Erreur lors de l\'enregistrement du jeu';
+        console.error('❌ Error saving game:', error);
+        this.error = error.error?.message || 'Erreur lors de l\'enregistrement du jeu';
         this.saving = false;
       }
     });
