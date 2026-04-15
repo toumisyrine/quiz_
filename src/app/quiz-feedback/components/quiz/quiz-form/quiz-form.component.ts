@@ -103,10 +103,7 @@ export class QuizFormComponent implements OnInit, OnDestroy {
   }
 
   cancel(): void {
-    if (this.isEditMode && this.quizId) {
-      this.router.navigate(['/dashboard/quizzes', this.quizId]);
-    } else {
-      this.router.navigate(['/dashboard/quizzes']);
-    }
+    // Toujours retourner à la liste des quiz
+    this.router.navigate(['/dashboard/quizzes']);
   }
 }

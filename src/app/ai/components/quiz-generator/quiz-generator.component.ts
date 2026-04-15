@@ -38,14 +38,24 @@ export class QuizGeneratorComponent implements OnInit {
   }
 
   loadSuggestedTopics() {
-    this.aiService.getSuggestedTopics().subscribe({
-      next: (topics) => {
-        this.suggestedTopics = topics;
-      },
-      error: () => {
-        this.suggestedTopics = [];
-      }
-    });
+    // Sujets d'anglais suggérés
+    this.suggestedTopics = [
+      'English Grammar Basics',
+      'Verb Tenses',
+      'Vocabulary Building',
+      'Reading Comprehension',
+      'Business English',
+      'Idioms and Phrases',
+      'Prepositions',
+      'Articles and Determiners',
+      'Conditionals',
+      'Passive Voice',
+      'Reported Speech',
+      'Punctuation and Spelling',
+      'Formal vs Informal English',
+      'Listening and Speaking',
+      'English Pronunciation'
+    ];
   }
 
   selectTopic(topic: string) {
@@ -69,14 +79,18 @@ export class QuizGeneratorComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        if (err.status === 0) {
-          this.error = 'Impossible de se connecter au service IA. Vérifiez que le service est démarré sur le port 8082.';
-        } else if (err.status === 500) {
-          this.error = 'Erreur lors de la génération. Vérifiez que la clé API Gemini est configurée.';
-        } else {
-          this.error = 'Échec de la génération du quiz: ' + (err.error?.message || err.message);
-        }
+        console.error('Erreur génération quiz:', err);
         this.loading = false;
+        
+        if (err.status === 0) {
+          this.error = 'Service IA non disponible. Vérifiez que le service est démarré.';
+        } else if (err.error?.message) {
+          this.error = err.error.message;
+        } else if (err.error?.error) {
+          this.error = err.error.error;
+        } else {
+          this.error = 'Erreur lors de la génération du quiz. Veuillez réessayer.';
+        }
       }
     });
   }

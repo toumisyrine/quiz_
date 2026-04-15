@@ -49,6 +49,16 @@ public class QuizController {
         return ResponseEntity.ok(quizService.getPublishedQuizzes());
     }
     
+    @GetMapping("/kids")
+    public ResponseEntity<List<QuizResponseDTO>> getAllKidsGames() {
+        return ResponseEntity.ok(quizService.getKidsGames());
+    }
+    
+    @GetMapping("/kids/{category}")
+    public ResponseEntity<List<QuizResponseDTO>> getKidsGamesByCategory(@PathVariable String category) {
+        return ResponseEntity.ok(quizService.getKidsGamesByCategory(category));
+    }
+    
     @PostMapping
     public ResponseEntity<QuizResponseDTO> createQuiz(@Valid @RequestBody QuizCreateDTO dto) {
         return new ResponseEntity<>(quizService.createQuiz(dto), HttpStatus.CREATED);

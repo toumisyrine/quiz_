@@ -41,6 +41,11 @@ public class Quiz {
     @Column(nullable = false)
     private QuizStatus status = QuizStatus.DRAFT;
     
+    @Enumerated(EnumType.STRING)
+    private QuizType type = QuizType.REGULAR;
+    
+    private String category;
+    
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
     

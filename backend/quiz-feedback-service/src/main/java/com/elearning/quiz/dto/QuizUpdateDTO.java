@@ -1,6 +1,7 @@
 package com.elearning.quiz.dto;
 
 import com.elearning.quiz.model.QuizStatus;
+import com.elearning.quiz.model.QuizType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,4 +26,8 @@ public class QuizUpdateDTO {
     private Integer totalPoints;
     
     private QuizStatus status;
+    
+    private QuizType type;
+    
+    private String category;
 }

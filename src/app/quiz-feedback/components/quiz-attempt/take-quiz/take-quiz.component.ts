@@ -288,9 +288,9 @@ export class TakeQuizComponent implements OnInit, OnDestroy {
       this.saveProgress();
       const isDashboard = this.router.url.includes('/dashboard');
       if (isDashboard) {
-        this.router.navigate(['/dashboard/quizzes', this.quiz?.id]);
+        this.router.navigate(['/dashboard/quizzes']);
       } else {
-        this.router.navigate(['/quizzes', this.quiz?.id]);
+        this.router.navigate(['/quizzes']);
       }
     }
   }

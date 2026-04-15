@@ -31,6 +31,8 @@ public class QuestionCreateDTO {
     
     private Integer orderIndex;
     
+    private String imageEmoji;
+    
     @NotNull(message = "Quiz ID is required")
     private Long quizId;
 }

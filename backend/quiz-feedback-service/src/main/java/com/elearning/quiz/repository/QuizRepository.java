@@ -2,6 +2,7 @@ package com.elearning.quiz.repository;
 
 import com.elearning.quiz.model.Quiz;
 import com.elearning.quiz.model.QuizStatus;
+import com.elearning.quiz.model.QuizType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,4 +18,8 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
     List<Quiz> findByStatus(QuizStatus status);
     
     List<Quiz> findByTitleContainingIgnoreCase(String title);
+    
+    List<Quiz> findByType(QuizType type);
+    
+    List<Quiz> findByTypeAndCategory(QuizType type, String category);
 }

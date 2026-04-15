@@ -1,6 +1,7 @@
 package com.elearning.quiz.dto;
 
 import com.elearning.quiz.model.QuizStatus;
+import com.elearning.quiz.model.QuizType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -29,4 +30,8 @@ public class QuizCreateDTO {
     private Integer totalPoints;
     
     private QuizStatus status = QuizStatus.DRAFT;
+    
+    private QuizType type = QuizType.REGULAR;
+    
+    private String category;
 }

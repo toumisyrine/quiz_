@@ -21,6 +21,7 @@ export class AdminLayoutComponent {
         { path: '/dashboard/events', icon: 'ti ti-calendar-event', label: 'Events' },
         { path: '/dashboard/clubs', icon: 'ti ti-users-group', label: 'Clubs' },
         { path: '/dashboard/quizzes', icon: 'ti ti-clipboard-list', label: 'Quizzes' },
+        { path: '/dashboard/kids-games', icon: 'ti ti-puzzle', label: 'Kids Games' },
         { path: '/dashboard/feedbacks', icon: 'ti ti-message-star', label: 'Feedbacks' },
         { path: '/dashboard/ai/generator', icon: 'ti ti-sparkles', label: 'AI Quiz Generator' },
     ];

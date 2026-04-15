@@ -1,6 +1,7 @@
 package com.elearning.quiz.dto;
 
 import com.elearning.quiz.model.QuizStatus;
+import com.elearning.quiz.model.QuizType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,8 @@ public class QuizResponseDTO {
     private Float passingScore;
     private Integer totalPoints;
     private QuizStatus status;
+    private QuizType type;
+    private String category;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long questionCount;

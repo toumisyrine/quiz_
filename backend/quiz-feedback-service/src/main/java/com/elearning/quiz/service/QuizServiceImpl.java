@@ -36,6 +36,8 @@ public class QuizServiceImpl implements QuizService {
         quiz.setPassingScore(dto.getPassingScore());
         quiz.setTotalPoints(dto.getTotalPoints());
         quiz.setStatus(dto.getStatus() != null ? dto.getStatus() : QuizStatus.DRAFT);
+        quiz.setType(dto.getType() != null ? dto.getType() : com.elearning.quiz.model.QuizType.REGULAR);
+        quiz.setCategory(dto.getCategory());
         
         Quiz saved = quizRepository.save(quiz);
         return mapToResponseDTO(saved);
@@ -69,6 +71,8 @@ public class QuizServiceImpl implements QuizService {
         if (dto.getPassingScore() != null) quiz.setPassingScore(dto.getPassingScore());
         if (dto.getTotalPoints() != null) quiz.setTotalPoints(dto.getTotalPoints());
         if (dto.getStatus() != null) quiz.setStatus(dto.getStatus());
+        if (dto.getType() != null) quiz.setType(dto.getType());
+        if (dto.getCategory() != null) quiz.setCategory(dto.getCategory());
         
         Quiz updated = quizRepository.save(quiz);
         return mapToResponseDTO(updated);
@@ -80,6 +84,18 @@ public class QuizServiceImpl implements QuizService {
         if (!quizRepository.existsById(id)) {
             throw new ResourceNotFoundException("Quiz", "id", id);
         }
+        
+        // Delete all related data first to avoid foreign key constraint violations
+        // 1. Delete feedbacks related to this quiz
+        feedbackRepository.deleteByQuizId(id);
+        
+        // 2. Delete all attempts for this quiz
+        attemptRepository.deleteByQuizId(id);
+        
+        // 3. Delete all questions (cascade will handle question_options)
+        questionRepository.deleteByQuizId(id);
+        
+        // 4. Finally delete the quiz itself
         quizRepository.deleteById(id);
     }
     
@@ -143,6 +159,23 @@ public class QuizServiceImpl implements QuizService {
         );
     }
     
+    @Override
+    public List<QuizResponseDTO> getKidsGames() {
+        return quizRepository.findByType(com.elearning.quiz.model.QuizType.KIDS_GAME).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<QuizResponseDTO> getKidsGamesByCategory(String category) {
+        return quizRepository.findByTypeAndCategory(
+                com.elearning.quiz.model.QuizType.KIDS_GAME, 
+                category
+        ).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+    
     private QuizResponseDTO mapToResponseDTO(Quiz quiz) {
         Long questionCount = questionRepository.countByQuizId(quiz.getId());
         Double averageScore = attemptRepository.getAverageScoreByQuizId(quiz.getId());
@@ -157,6 +190,8 @@ public class QuizServiceImpl implements QuizService {
                 quiz.getPassingScore(),
                 quiz.getTotalPoints(),
                 quiz.getStatus(),
+                quiz.getType(),
+                quiz.getCategory(),
                 quiz.getCreatedAt(),
                 quiz.getUpdatedAt(),
                 questionCount,

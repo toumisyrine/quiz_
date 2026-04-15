@@ -13,6 +13,8 @@ export interface Quiz {
   passingScore?: number;
   totalPoints?: number;
   status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  type?: 'REGULAR' | 'KIDS_GAME';
+  category?: string;
   createdAt?: string;
   updatedAt?: string;
   questionCount?: number;
@@ -36,6 +38,7 @@ export interface Question {
   explanation?: string;
   orderIndex?: number;
   quizId: number;
+  imageEmoji?: string;
 }
 
 export interface QuizAttemptSubmit {

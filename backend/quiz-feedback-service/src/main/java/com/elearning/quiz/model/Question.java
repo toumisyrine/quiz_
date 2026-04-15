@@ -26,6 +26,8 @@ public class Question {
     @Column(nullable = false)
     private QuestionType type;
     
+    private String imageEmoji;
+    
     @ElementCollection
     @CollectionTable(name = "question_options", joinColumns = @JoinColumn(name = "question_id"))
     @Column(name = "option_text")

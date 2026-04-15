@@ -65,8 +65,8 @@ const routes: Routes = [
                 children: [
                     { 
                         path: '', 
-                        loadComponent: () => import('../quiz-feedback/components/quiz/quiz-list/quiz-list.component')
-                            .then(m => m.QuizListComponent) 
+                        loadComponent: () => import('./quizzes/admin-quiz-list.component')
+                            .then(m => m.AdminQuizListComponent) 
                     },
                     { 
                         path: 'new', 
@@ -82,6 +82,50 @@ const routes: Routes = [
                         path: ':id/edit', 
                         loadComponent: () => import('../quiz-feedback/components/quiz/quiz-form/quiz-form.component')
                             .then(m => m.QuizFormComponent) 
+                    },
+                    { 
+                        path: ':id/questions', 
+                        loadComponent: () => import('../quiz-feedback/components/question/question-manager/question-manager.component')
+                            .then(m => m.QuestionManagerComponent) 
+                    }
+                ]
+            },
+            
+            // ============================================
+            // GESTION DES KIDS GAMES (ADMIN)
+            // ============================================
+            {
+                path: 'kids-games',
+                children: [
+                    { 
+                        path: '', 
+                        loadComponent: () => import('./kids-games/kids-games-list-new.component')
+                            .then(m => m.KidsGamesListNewComponent) 
+                    },
+                    { 
+                        path: 'categories', 
+                        loadComponent: () => import('./kids-games/category-manager.component')
+                            .then(m => m.CategoryManagerComponent) 
+                    },
+                    { 
+                        path: 'new', 
+                        loadComponent: () => import('./kids-games/kids-game-form-new.component')
+                            .then(m => m.KidsGameFormNewComponent) 
+                    },
+                    { 
+                        path: 'ai-generate', 
+                        loadComponent: () => import('./kids-games/kids-game-ai-generator.component')
+                            .then(m => m.KidsGameAiGeneratorComponent) 
+                    },
+                    { 
+                        path: ':id/edit', 
+                        loadComponent: () => import('./kids-games/kids-game-form-new.component')
+                            .then(m => m.KidsGameFormNewComponent) 
+                    },
+                    { 
+                        path: ':id/questions', 
+                        loadComponent: () => import('./kids-games/kids-question-manager-new.component')
+                            .then(m => m.KidsQuestionManagerNewComponent) 
                     }
                 ]
             },
@@ -94,8 +138,8 @@ const routes: Routes = [
                 children: [
                     { 
                         path: '', 
-                        loadComponent: () => import('../quiz-feedback/components/feedback/feedback-list/feedback-list.component')
-                            .then(m => m.FeedbackListComponent) 
+                        loadComponent: () => import('../quiz-feedback/components/feedback/feedback-manager/feedback-manager.component')
+                            .then(m => m.FeedbackManagerComponent) 
                     },
                     { 
                         path: 'new', 

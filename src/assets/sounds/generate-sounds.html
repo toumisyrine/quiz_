@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Game Sounds</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .info {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Kids Game Sound Generator</h1>
+    <div class="info">
+        <p>Click the buttons below to generate and download sound effects for the kids game.</p>
+        <p>Save the downloaded files in: <code>src/assets/sounds/</code></p>
+    </div>
+    
+    <button onclick="generateCorrectSound()">Generate Correct Sound</button>
+    <button onclick="generateWrongSound()">Generate Wrong Sound</button>
+    <button onclick="generateClickSound()">Generate Click Sound</button>
+
+    <script>
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function generateCorrectSound() {
+            const duration = 0.5;
+            const sampleRate = audioContext.sampleRate;
+            const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+            const data = buffer.getChannelData(0);
+
+            // Happy ascending notes
+            for (let i = 0; i < data.length; i++) {
+                const t = i / sampleRate;
+                const freq1 = 523.25; // C5
+                const freq2 = 659.25; // E5
+                const freq3 = 783.99; // G5
+                
+                const envelope = Math.exp(-3 * t);
+                data[i] = envelope * (
+                    Math.sin(2 * Math.PI * freq1 * t) * 0.3 +
+                    Math.sin(2 * Math.PI * freq2 * t) * 0.3 +
+                    Math.sin(2 * Math.PI * freq3 * t) * 0.4
+                );
+            }
+
+            downloadBuffer(buffer, 'correct.wav');
+        }
+
+        function generateWrongSound() {
+            const duration = 0.3;
+            const sampleRate = audioContext.sampleRate;
+            const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+            const data = buffer.getChannelData(0);
+
+            // Descending "buzzer" sound
+            for (let i = 0; i < data.length; i++) {
+                const t = i / sampleRate;
+                const freq = 200 - (t * 100); // Descending frequency
+                const envelope = Math.exp(-5 * t);
+                data[i] = envelope * Math.sin(2 * Math.PI * freq * t) * 0.5;
+            }
+
+            downloadBuffer(buffer, 'wrong.wav');
+        }
+
+        function generateClickSound() {
+            const duration = 0.1;
+            const sampleRate = audioContext.sampleRate;
+            const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+            const data = buffer.getChannelData(0);
+
+            // Short click sound
+            for (let i = 0; i < data.length; i++) {
+                const t = i / sampleRate;
+                const freq = 800;
+                const envelope = Math.exp(-30 * t);
+                data[i] = envelope * Math.sin(2 * Math.PI * freq * t) * 0.3;
+            }
+
+            downloadBuffer(buffer, 'click.wav');
+        }
+
+        function downloadBuffer(buffer, filename) {
+            const wav = bufferToWave(buffer);
+            const blob = new Blob([wav], { type: 'audio/wav' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function bufferToWave(buffer) {
+            const length = buffer.length * buffer.numberOfChannels * 2 + 44;
+            const arrayBuffer = new ArrayBuffer(length);
+            const view = new DataView(arrayBuffer);
+            const channels = [];
+            let offset = 0;
+            let pos = 0;
+
+            // Write WAV header
+            setUint32(0x46464952); // "RIFF"
+            setUint32(length - 8); // file length - 8
+            setUint32(0x45564157); // "WAVE"
+            setUint32(0x20746d66); // "fmt " chunk
+            setUint32(16); // length = 16
+            setUint16(1); // PCM (uncompressed)
+            setUint16(buffer.numberOfChannels);
+            setUint32(buffer.sampleRate);
+            setUint32(buffer.sampleRate * 2 * buffer.numberOfChannels); // avg. bytes/sec
+            setUint16(buffer.numberOfChannels * 2); // block-align
+            setUint16(16); // 16-bit
+            setUint32(0x61746164); // "data" - chunk
+            setUint32(length - pos - 4); // chunk length
+
+            // Write interleaved data
+            for (let i = 0; i < buffer.numberOfChannels; i++) {
+                channels.push(buffer.getChannelData(i));
+            }
+
+            while (pos < length) {
+                for (let i = 0; i < buffer.numberOfChannels; i++) {
+                    let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+                    sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                    view.setInt16(pos, sample, true);
+                    pos += 2;
+                }
+                offset++;
+            }
+
+            return arrayBuffer;
+
+            function setUint16(data) {
+                view.setUint16(pos, data, true);
+                pos += 2;
+            }
+
+            function setUint32(data) {
+                view.setUint32(pos, data, true);
+                pos += 4;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -28,4 +28,8 @@ public interface QuizService {
     Quiz getQuizWithQuestions(Long id);
     
     QuizStatsDTO getQuizStats(Long id);
+    
+    List<QuizResponseDTO> getKidsGames();
+    
+    List<QuizResponseDTO> getKidsGamesByCategory(String category);
 }

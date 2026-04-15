@@ -19,4 +19,5 @@ public class QuestionUpdateDTO {
     private Integer points;
     private String explanation;
     private Integer orderIndex;
+    private String imageEmoji;
 }

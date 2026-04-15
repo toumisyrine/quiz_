@@ -19,10 +19,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
-gemini:
-  api:
-    key: AIzaSyDRjSoMWQKu7htQMlG9TWTjOEU8Nc_EvGA
-    url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
+
 eureka:
   client:
     service-url:
@@ -38,3 +35,8 @@ management:
     web:
       exposure:
         include: health,info,metrics
+
+gemini:
+  api:
+    key: "AIzaSyC2EDlEqAzVNi5k2myZZl4jstiuZ4kEQ8A"
+    url: "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent"

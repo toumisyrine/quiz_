@@ -20,5 +20,6 @@ public class QuestionResponseDTO {
     private Integer points;
     private String explanation;
     private Integer orderIndex;
+    private String imageEmoji;
     private Long quizId;
 }

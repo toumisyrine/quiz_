@@ -196,33 +196,8 @@ export class FeedbackFormComponent implements OnInit, OnDestroy {
   }
 
   cancel(): void {
-    // Si on vient de la page de résultats, y retourner
-    if (this.attemptId) {
-      const isDashboard = this.router.url.includes('/dashboard');
-      if (isDashboard) {
-        this.router.navigate(['/dashboard/attempts', this.attemptId, 'result']);
-      } else {
-        this.router.navigate(['/attempts', this.attemptId, 'result']);
-      }
-      return;
-    }
-    
-    // Sinon, retour à la page précédente ou liste des quiz
-    const quizId = this.feedbackForm.get('quizId')?.value;
-    const isDashboard = this.router.url.includes('/dashboard');
-    if (quizId) {
-      if (isDashboard) {
-        this.router.navigate(['/dashboard/quizzes', quizId]);
-      } else {
-        this.router.navigate(['/quizzes', quizId]);
-      }
-    } else {
-      if (isDashboard) {
-        this.router.navigate(['/dashboard/quizzes']);
-      } else {
-        this.router.navigate(['/quizzes']);
-      }
-    }
+    // Toujours retourner à la liste des feedbacks
+    this.router.navigate(['/dashboard/feedbacks']);
   }
 
   getStarClass(index: number): string {

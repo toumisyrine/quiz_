@@ -36,6 +36,7 @@ public class QuestionServiceImpl implements QuestionService {
         question.setPoints(dto.getPoints() != null ? dto.getPoints() : 1);
         question.setExplanation(dto.getExplanation());
         question.setOrderIndex(dto.getOrderIndex());
+        question.setImageEmoji(dto.getImageEmoji());
         question.setQuiz(quiz);
         
         Question saved = questionRepository.save(question);
@@ -62,6 +63,7 @@ public class QuestionServiceImpl implements QuestionService {
         if (dto.getPoints() != null) question.setPoints(dto.getPoints());
         if (dto.getExplanation() != null) question.setExplanation(dto.getExplanation());
         if (dto.getOrderIndex() != null) question.setOrderIndex(dto.getOrderIndex());
+        if (dto.getImageEmoji() != null) question.setImageEmoji(dto.getImageEmoji());
         
         Question updated = questionRepository.save(question);
         return mapToResponseDTO(updated);
@@ -105,6 +107,7 @@ public class QuestionServiceImpl implements QuestionService {
                 question.getPoints(),
                 question.getExplanation(),
                 question.getOrderIndex(),
+                question.getImageEmoji(),
                 question.getQuizId()
         );
     }

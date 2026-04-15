@@ -122,22 +122,13 @@ export class AttemptResultComponent implements OnInit, OnDestroy {
   }
 
   giveFeedback(): void {
-    const isDashboard = this.router.url.includes('/dashboard');
-    if (isDashboard) {
-      this.router.navigate(['/dashboard/feedbacks/new'], {
-        queryParams: { 
-          quizId: this.attempt?.quizId,
-          attemptId: this.attempt?.id
-        }
-      });
-    } else {
-      this.router.navigate(['/feedbacks/new'], {
-        queryParams: { 
-          quizId: this.attempt?.quizId,
-          attemptId: this.attempt?.id
-        }
-      });
-    }
+    // Rediriger vers la page de conseils IA
+    this.router.navigate(['/ai/advice'], {
+      queryParams: { 
+        quizId: this.attempt?.quizId,
+        attemptId: this.attempt?.id
+      }
+    });
   }
 
   viewAllAttempts(): void {

@@ -35,3 +35,8 @@ management:
     web:
       exposure:
         include: health,info,metrics
+
+gemini:
+  api:
+    key: "AIzaSyC2EDlEqAzVNi5k2myZZl4jstiuZ4kEQ8A"
+    url: "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent"

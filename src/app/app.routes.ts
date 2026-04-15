@@ -80,6 +80,20 @@ export const routes: Routes = [
     ]
   },
   
+  // AI Advice (Conseils IA après un quiz)
+  {
+    path: 'ai/advice',
+    loadComponent: () => import('./ai/components/ai-advice/ai-advice.component')
+      .then(m => m.AiAdviceComponent)
+  },
+  
+  // Kids Zone
+  {
+    path: 'kids',
+    loadComponent: () => import('./kids/kids-game/kids-game.component')
+      .then(m => m.KidsGameComponent)
+  },
+  
   // ============================================
   // ROUTES ADMIN (avec sidebar/navbar)
   // Pour les administrateurs et enseignants

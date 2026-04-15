@@ -13,14 +13,15 @@ public class GeneratedQuizDTO {
     private String description;
     private Integer suggestedPassingScore;
     private Integer suggestedTimeLimit;
-    private List<GeneratedQuestionDTO> questions;
+    private List<Question> questions;
     
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class GeneratedQuestionDTO {
+    public static class Question {
         private String text;
         private String type;
+        private String imageEmoji;
         private List<String> options;
         private String correctAnswer;
         private int points;
