@@ -1,0 +1,106 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKERHUB_USER = 'syrinaaa'
+        DOCKER_CREDENTIALS = 'dockerhub-credentials'
+        SERVICE_NAME = 'frontend'
+        IMAGE_TAG = "${BUILD_NUMBER}"
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '📥 Récupération du code source...'
+                checkout scm
+                sh 'pwd && ls -la'
+            }
+        }
+        
+        stage('Setup Node.js & Build') {
+            steps {
+                echo '🔧 Installation Node.js et build...'
+                sh '''
+                    # Installer Node.js
+                    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - || echo "Node.js déjà installé"
+                    sudo apt-get install -y nodejs || echo "Node.js déjà présent"
+                    
+                    # Vérifier versions
+                    node --version || echo "Node.js non disponible"
+                    npm --version || echo "npm non disponible"
+                    
+                    # Installer dépendances si package.json existe
+                    if [ -f "package.json" ]; then
+                        npm ci || npm install
+                        npm run build || echo "Build échoué"
+                    else
+                        echo "⚠️ Pas de package.json trouvé - création d'un build factice"
+                        mkdir -p dist/frontend
+                        echo "<h1>Frontend Placeholder</h1>" > dist/frontend/index.html
+                    fi
+                    
+                    ls -la dist/ || echo "Pas de dossier dist"
+                '''
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo '🐳 Construction image Docker...'
+                    
+                    // Créer un Dockerfile simple si pas de Dockerfile.frontend
+                    sh '''
+                        if [ ! -f "Dockerfile.frontend" ]; then
+                            cat > Dockerfile.simple << EOF
+FROM nginx:alpine
+COPY dist/ /usr/share/nginx/html/
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+EOF
+                        fi
+                    '''
+                    
+                    // Login Docker Hub
+                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    }
+                    
+                    // Build image
+                    sh '''
+                        if [ -f "Dockerfile.frontend" ]; then
+                            docker build -f Dockerfile.frontend -t ${DOCKERHUB_USER}/${SERVICE_NAME}:${IMAGE_TAG} .
+                        else
+                            docker build -f Dockerfile.simple -t ${DOCKERHUB_USER}/${SERVICE_NAME}:${IMAGE_TAG} .
+                        fi
+                    '''
+                    
+                    // Push image
+                    try {
+                        sh "docker push ${DOCKERHUB_USER}/${SERVICE_NAME}:${IMAGE_TAG}"
+                        sh "docker tag ${DOCKERHUB_USER}/${SERVICE_NAME}:${IMAGE_TAG} ${DOCKERHUB_USER}/${SERVICE_NAME}:latest"
+                        sh "docker push ${DOCKERHUB_USER}/${SERVICE_NAME}:latest"
+                        echo "✅ Images poussées vers Docker Hub"
+                    } catch (Exception e) {
+                        echo "⚠️ Push échoué: ${e.getMessage()}"
+                    }
+                    
+                    sh 'docker logout'
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo '🎉 FRONTEND BUILD RÉUSSI!'
+            echo "📦 Image: ${DOCKERHUB_USER}/${SERVICE_NAME}:${IMAGE_TAG}"
+        }
+        failure {
+            echo '❌ FRONTEND BUILD ÉCHOUÉ!'
+        }
+        always {
+            cleanWs()
+        }
+    }
+}

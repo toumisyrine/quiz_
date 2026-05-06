@@ -1,0 +1,54 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-bold text-primary" routerLink="/">
+      <i class="fas fa-graduation-cap me-2"></i>LearnHub
+    </a>
+    
+    <button 
+      class="navbar-toggler" 
+      type="button" 
+      (click)="toggleMenu()"
+      [attr.aria-expanded]="isMenuOpen">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    
+    <div class="collapse navbar-collapse" [class.show]="isMenuOpen">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+            Accueil
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/courses" routerLinkActive="active">
+            Cours
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/quiz" routerLinkActive="active">
+            Quiz
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/events" routerLinkActive="active">
+            Événements
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/clubs" routerLinkActive="active">
+            Clubs
+          </a>
+        </li>
+      </ul>
+      
+      <div class="d-flex">
+        <button class="btn btn-outline-primary me-2" type="button">
+          Connexion
+        </button>
+        <button class="btn btn-primary" type="button" (click)="onOpenModal()">
+          Commencer
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>

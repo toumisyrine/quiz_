@@ -5,8 +5,8 @@ import { Subject, forkJoin } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { QuizAttemptResponse, Quiz, Question } from '../../../models/quiz-feedback.models';
 import { QuizAttemptService, QuizService, QuestionService } from '../../../services/quiz-feedback.services';
-import { NavbarComponent } from '../../../../components/navbar/navbar.component';
-import { FooterComponent } from '../../../../components/footer/footer.component';
+import { NavbarComponent } from '../../../../core/components/navbar/navbar.component';
+import { FooterComponent } from '../../../../core/components/footer/footer.component';
 import jsPDF from 'jspdf';
 
 @Component({

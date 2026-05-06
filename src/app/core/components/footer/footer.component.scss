@@ -1,0 +1,17 @@
+// Footer styles
+footer {
+  background-color: #1a1a1a;
+  
+  h5, h6 {
+    color: #fff;
+    margin-bottom: 1rem;
+  }
+  
+  a {
+    transition: color 0.3s ease;
+    
+    &:hover {
+      color: var(--bs-primary) !important;
+    }
+  }
+}

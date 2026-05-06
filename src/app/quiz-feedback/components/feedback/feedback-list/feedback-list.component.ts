@@ -7,8 +7,8 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Feedback, Quiz } from '../../../models/quiz-feedback.models';
 import { FeedbackService, QuizService } from '../../../services/quiz-feedback.services';
-import { NavbarComponent } from '../../../../components/navbar/navbar.component';
-import { FooterComponent } from '../../../../components/footer/footer.component';
+import { NavbarComponent } from '../../../../core/components/navbar/navbar.component';
+import { FooterComponent } from '../../../../core/components/footer/footer.component';
 
 @Component({
   selector: 'app-feedback-list',
