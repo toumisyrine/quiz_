@@ -31,8 +31,30 @@ pipeline {
         stage('3 — Apply K8s') {
             steps {
                 echo '☸️ Déploiement sur Kubernetes...'
-                sh 'kubectl apply -f k8s-deploy.yaml'
-                echo '✅ Manifests appliqués avec succès'
+                script {
+                    try {
+                        // Vérifier la connexion Kubernetes
+                        sh 'kubectl cluster-info'
+                        sh 'kubectl get nodes'
+                        
+                        // Vérifier le fichier YAML
+                        sh 'kubectl apply --dry-run=client -f k8s-deploy.yaml'
+                        
+                        // Créer le namespace s'il n'existe pas
+                        sh 'kubectl create namespace learnhub --dry-run=client -o yaml | kubectl apply -f -'
+                        
+                        // Appliquer les manifests
+                        sh 'kubectl apply -f k8s-deploy.yaml'
+                        echo '✅ Manifests appliqués avec succès'
+                        
+                    } catch (Exception e) {
+                        echo "❌ Erreur lors du déploiement: ${e.getMessage()}"
+                        echo "🔍 Vérification de l'état de Kubernetes:"
+                        sh 'kubectl cluster-info || echo "Pas de connexion K8s"'
+                        sh 'kubectl get nodes || echo "Pas de nodes disponibles"'
+                        throw e
+                    }
+                }
             }
         }
         

@@ -1,0 +1,70 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKERHUB_USER = 'syrinaaa'
+    }
+    
+    stages {
+        stage('1 — Checkout') {
+            steps {
+                echo '📥 Récupération du code...'
+                checkout scm
+                sh 'ls -la docker-compose.yml'
+            }
+        }
+        
+        stage('2 — Pull Latest Images') {
+            steps {
+                echo '🔍 Récupération des dernières images...'
+                sh 'docker pull syrinaaa/eureka-server:latest'
+                sh 'docker pull syrinaaa/api-gateway:latest'
+                sh 'docker pull syrinaaa/quiz-feedback-service:latest'
+                sh 'docker pull syrinaaa/ai-service:latest'
+                echo '✅ Toutes les images récupérées'
+            }
+        }
+        
+        stage('3 — Stop Old Services') {
+            steps {
+                echo '🛑 Arrêt des anciens services...'
+                sh 'docker-compose down || echo "Aucun service à arrêter"'
+            }
+        }
+        
+        stage('4 — Deploy Services') {
+            steps {
+                echo '🚀 Déploiement des services...'
+                sh 'docker-compose up -d'
+                sh 'docker-compose ps'
+            }
+        }
+        
+        stage('5 — Health Check') {
+            steps {
+                echo '🏥 Vérification de la santé des services...'
+                sleep 30 // Attendre que les services démarrent
+                sh 'docker-compose ps'
+                sh 'docker-compose logs --tail=10'
+                
+                echo '🌐 Services disponibles sur:'
+                echo '  • Eureka: http://localhost:8761'
+                echo '  • API Gateway: http://localhost:8888'
+                echo '  • Quiz Service: http://localhost:8089'
+                echo '  • AI Service: http://localhost:8090'
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo '🎉 DÉPLOIEMENT DOCKER COMPOSE RÉUSSI!'
+            echo '📊 Vérifiez avec: docker-compose ps'
+            echo '🌐 Eureka Dashboard: http://localhost:8761'
+        }
+        failure {
+            echo '❌ DÉPLOIEMENT ÉCHOUÉ!'
+            echo '🔍 Vérifiez: docker-compose logs'
+        }
+    }
+}

@@ -1,0 +1,66 @@
+pipeline {
+    agent any
+    
+    environment {
+        KUBECONFIG = '/var/lib/jenkins/.kube/config'
+    }
+    
+    stages {
+        stage('Test Kubernetes Connection') {
+            steps {
+                echo '🔍 Test de connexion Kubernetes...'
+                sh 'kubectl cluster-info'
+                sh 'kubectl get nodes'
+                sh 'kubectl get namespaces'
+            }
+        }
+        
+        stage('Test YAML Syntax') {
+            steps {
+                echo '📝 Test de syntaxe YAML...'
+                checkout scm
+                sh 'kubectl apply --dry-run=client -f k8s-deploy.yaml'
+                echo '✅ YAML valide'
+            }
+        }
+        
+        stage('Create Namespace') {
+            steps {
+                echo '📁 Création du namespace...'
+                sh 'kubectl create namespace learnhub --dry-run=client -o yaml | kubectl apply -f -'
+                sh 'kubectl get namespace learnhub'
+            }
+        }
+        
+        stage('Deploy One Service') {
+            steps {
+                echo '🚀 Test déploiement Eureka seulement...'
+                sh '''
+                    kubectl apply -f - <<EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eureka-server-test
+  namespace: learnhub
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eureka-server-test
+  template:
+    metadata:
+      labels:
+        app: eureka-server-test
+    spec:
+      containers:
+      - name: eureka-server
+        image: syrinaaa/eureka-server:latest
+        ports:
+        - containerPort: 8761
+EOF
+                '''
+                sh 'kubectl get pods -n learnhub'
+            }
+        }
+    }
+}
