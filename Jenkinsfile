@@ -1,11 +1,11 @@
 pipeline {
     agent any
-    
+
     environment {
         DOCKERHUB_USER = 'syrinaaa'
         IMAGE_TAG = "${BUILD_NUMBER}"
     }
-    
+
     stages {
         stage('Build All Services') {
             parallel {
@@ -53,7 +53,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         success {
             echo '🎉 TOUS LES SERVICES ONT ÉTÉ BUILDÉS AVEC SUCCÈS!'
