@@ -33,12 +33,12 @@ pipeline {
                               parameters: [string(name: 'BRANCH', value: env.BRANCH_NAME ?: 'quiz-feedback_branch')]
                     }
                 }
-                stage('Trigger Frontend') {
-                    steps {
-                        build job: 'frontend-pipeline',
-                              parameters: [string(name: 'BRANCH', value: env.BRANCH_NAME ?: 'quiz-feedback_branch')]
-                    }
-                }
+                // stage('Trigger Frontend') {
+                //     steps {
+                //         build job: 'frontend-pipeline',
+                //               parameters: [string(name: 'BRANCH', value: env.BRANCH_NAME ?: 'quiz-feedback_branch')]
+                //     }
+                // }
             }
         }
     }
@@ -51,7 +51,7 @@ pipeline {
             echo "  • ${DOCKERHUB_USER}/api-gateway:${IMAGE_TAG}"
             echo "  • ${DOCKERHUB_USER}/quiz-feedback-service:${IMAGE_TAG}"
             echo "  • ${DOCKERHUB_USER}/ai-service:${IMAGE_TAG}"
-            echo "  • ${DOCKERHUB_USER}/frontend:${IMAGE_TAG}"
+            // echo "  • ${DOCKERHUB_USER}/frontend:${IMAGE_TAG}"
         }
         failure {
             echo '❌ Un ou plusieurs services ont échoué!'
