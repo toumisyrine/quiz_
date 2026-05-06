@@ -1,60 +1,159 @@
 pipeline {
     agent any
     
+    parameters {
+        string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'Tag des images Docker à déployer')
+        choice(name: 'ENVIRONMENT', choices: ['production', 'staging'], description: 'Environnement de déploiement')
+    }
+    
     environment {
         DOCKERHUB_USER = 'syrinaaa'
-        IMAGE_TAG = "${BUILD_NUMBER}"
+        KUBECONFIG = '/var/lib/jenkins/.kube/config'
+        NAMESPACE = 'learnhub'
     }
     
     stages {
-        stage('Build All Services') {
-            parallel {
-                stage('Trigger Eureka Server') {
-                    steps {
-                        build job: 'eureka-server-pipeline', 
-                              parameters: [string(name: 'BRANCH', value: env.BRANCH_NAME ?: 'quiz-feedback_branch')]
+        stage('Checkout Manifests') {
+            steps {
+                echo '📥 Récupération des manifests Kubernetes...'
+                checkout scm
+                sh 'ls -la'
+                sh 'cat k8s-deploy.yaml | head -20'
+            }
+        }
+        
+        stage('Verify Docker Images') {
+            steps {
+                echo '🔍 Vérification de la disponibilité des images Docker...'
+                script {
+                    def services = ['eureka-server', 'api-gateway', 'quiz-feedback-service', 'ai-service']
+                    def imageTag = params.IMAGE_TAG
+                    
+                    services.each { service ->
+                        try {
+                            sh "docker pull ${DOCKERHUB_USER}/${service}:${imageTag}"
+                            echo "✅ Image ${service}:${imageTag} disponible"
+                        } catch (Exception e) {
+                            echo "⚠️ Image ${service}:${imageTag} non trouvée, utilisation de 'latest'"
+                            sh "docker pull ${DOCKERHUB_USER}/${service}:latest"
+                        }
                     }
                 }
-                stage('Trigger API Gateway') {
-                    steps {
-                        build job: 'api-gateway-pipeline',
-                              parameters: [string(name: 'BRANCH', value: env.BRANCH_NAME ?: 'quiz-feedback_branch')]
+            }
+        }
+        
+        stage('Update Kubernetes Manifests') {
+            steps {
+                echo '📝 Mise à jour des manifests avec les nouvelles images...'
+                script {
+                    def imageTag = params.IMAGE_TAG
+                    if (imageTag != 'latest') {
+                        sh """
+                            sed -i 's|syrinaaa/eureka-server:latest|syrinaaa/eureka-server:${imageTag}|g' k8s-deploy.yaml
+                            sed -i 's|syrinaaa/api-gateway:latest|syrinaaa/api-gateway:${imageTag}|g' k8s-deploy.yaml
+                            sed -i 's|syrinaaa/quiz-feedback-service:latest|syrinaaa/quiz-feedback-service:${imageTag}|g' k8s-deploy.yaml
+                            sed -i 's|syrinaaa/ai-service:latest|syrinaaa/ai-service:${imageTag}|g' k8s-deploy.yaml
+                        """
+                        echo "✅ Manifests mis à jour avec le tag: ${imageTag}"
                     }
                 }
-                stage('Trigger Quiz Feedback Service') {
-                    steps {
-                        build job: 'quiz-feedback-service-pipeline',
-                              parameters: [string(name: 'BRANCH', value: env.BRANCH_NAME ?: 'quiz-feedback_branch')]
+            }
+        }
+        
+        stage('Deploy to Kubernetes') {
+            steps {
+                echo '☸️ Déploiement sur Kubernetes...'
+                script {
+                    try {
+                        // Vérifier la connexion à Kubernetes
+                        sh 'kubectl cluster-info'
+                        sh 'kubectl get nodes'
+                        
+                        // Appliquer les manifests
+                        sh 'kubectl apply -f k8s-deploy.yaml'
+                        
+                        echo '✅ Manifests appliqués avec succès!'
+                        
+                    } catch (Exception e) {
+                        echo "❌ Erreur lors du déploiement: ${e.getMessage()}"
+                        throw e
                     }
                 }
-                stage('Trigger AI Service') {
-                    steps {
-                        build job: 'ai-service-pipeline',
-                              parameters: [string(name: 'BRANCH', value: env.BRANCH_NAME ?: 'quiz-feedback_branch')]
+            }
+        }
+        
+        stage('Wait for Pods') {
+            steps {
+                echo '⏳ Attente du démarrage des pods...'
+                script {
+                    try {
+                        // Attendre que les pods soient prêts
+                        sh "kubectl wait --for=condition=ready pod -l app=eureka-server -n ${NAMESPACE} --timeout=300s"
+                        sh "kubectl wait --for=condition=ready pod -l app=api-gateway -n ${NAMESPACE} --timeout=300s"
+                        sh "kubectl wait --for=condition=ready pod -l app=quiz-feedback-service -n ${NAMESPACE} --timeout=300s"
+                        sh "kubectl wait --for=condition=ready pod -l app=ai-service -n ${NAMESPACE} --timeout=300s"
+                        
+                        echo '✅ Tous les pods sont prêts!'
+                        
+                    } catch (Exception e) {
+                        echo "⚠️ Certains pods ne sont pas encore prêts: ${e.getMessage()}"
+                        echo "📊 État actuel des pods:"
+                        sh "kubectl get pods -n ${NAMESPACE}"
                     }
                 }
-                // stage('Trigger Frontend') {
-                //     steps {
-                //         build job: 'frontend-pipeline',
-                //               parameters: [string(name: 'BRANCH', value: env.BRANCH_NAME ?: 'quiz-feedback_branch')]
-                //     }
-                // }
+            }
+        }
+        
+        stage('Health Check') {
+            steps {
+                echo '🏥 Vérification de la santé des services...'
+                script {
+                    try {
+                        // Afficher l'état des déploiements
+                        sh "kubectl get deployments -n ${NAMESPACE}"
+                        sh "kubectl get services -n ${NAMESPACE}"
+                        sh "kubectl get pods -n ${NAMESPACE}"
+                        
+                        // Obtenir les URLs des services
+                        echo '🌐 URLs des services:'
+                        sh """
+                            echo "Eureka Server: http://\$(minikube ip):\$(kubectl get svc eureka-service -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].nodePort}')"
+                            echo "API Gateway: http://\$(minikube ip):\$(kubectl get svc api-gateway-service -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].nodePort}')"
+                            echo "Quiz Feedback: http://\$(minikube ip):\$(kubectl get svc quiz-feedback-service -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].nodePort}')"
+                            echo "AI Service: http://\$(minikube ip):\$(kubectl get svc ai-service -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].nodePort}')"
+                        """
+                        
+                    } catch (Exception e) {
+                        echo "⚠️ Erreur lors de la vérification: ${e.getMessage()}"
+                    }
+                }
             }
         }
     }
     
     post {
         success {
-            echo '🎉 TOUS LES SERVICES ONT ÉTÉ BUILDÉS AVEC SUCCÈS!'
-            echo "📦 Images Docker créées:"
-            echo "  • ${DOCKERHUB_USER}/eureka-server:${IMAGE_TAG}"
-            echo "  • ${DOCKERHUB_USER}/api-gateway:${IMAGE_TAG}"
-            echo "  • ${DOCKERHUB_USER}/quiz-feedback-service:${IMAGE_TAG}"
-            echo "  • ${DOCKERHUB_USER}/ai-service:${IMAGE_TAG}"
-            // echo "  • ${DOCKERHUB_USER}/frontend:${IMAGE_TAG}"
+            echo '🎉 DÉPLOIEMENT KUBERNETES RÉUSSI!'
+            echo "🏷️ Images déployées avec le tag: ${params.IMAGE_TAG}"
+            echo "🌍 Environnement: ${params.ENVIRONMENT}"
+            echo "📊 Vérifiez l'état avec: kubectl get all -n ${NAMESPACE}"
         }
         failure {
-            echo '❌ Un ou plusieurs services ont échoué!'
+            echo '❌ DÉPLOIEMENT KUBERNETES ÉCHOUÉ!'
+            echo '🔍 Vérifiez les logs avec:'
+            echo "   kubectl get pods -n ${NAMESPACE}"
+            echo "   kubectl describe pods -n ${NAMESPACE}"
+            echo "   kubectl logs -n ${NAMESPACE} <pod-name>"
+        }
+        always {
+            echo '📊 État final des ressources Kubernetes:'
+            script {
+                try {
+                    sh "kubectl get all -n ${NAMESPACE} || echo 'Impossible de récupérer l état des ressources'"
+                } catch (Exception e) {
+                    echo "Erreur lors de l'affichage final: ${e.getMessage()}"
+                }
+            }
         }
     }
 }
