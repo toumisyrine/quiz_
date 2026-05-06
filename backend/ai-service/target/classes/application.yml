@@ -38,5 +38,5 @@ management:
 
 gemini:
   api:
-    key: "AIzaSyC2EDlEqAzVNi5k2myZZl4jstiuZ4kEQ8A"
-    url: "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent"
+    key: "AIzaSyDP4sPZO0rRkrm34gWnlPdXcql4uWMdqSk"
+    url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
