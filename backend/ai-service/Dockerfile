@@ -1,8 +1,11 @@
 # Dockerfile pour AI Service
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-alpine
 
 LABEL maintainer="syrinaaa"
 LABEL service="ai-service"
+
+# Install curl for health check
+RUN apk add --no-cache curl
 
 WORKDIR /app
 

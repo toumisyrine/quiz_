@@ -1,8 +1,11 @@
 # Dockerfile pour API Gateway
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-alpine
 
 LABEL maintainer="syrinaaa"
 LABEL service="api-gateway"
+
+# Install curl for health check
+RUN apk add --no-cache curl
 
 WORKDIR /app
 
