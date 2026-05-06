@@ -1,0 +1,68 @@
+pipeline {
+    agent any
+    
+    tools {
+        jdk 'jdk17'
+    }
+    
+    environment {
+        DOCKERHUB_USER = 'syrinaaa'
+        DOCKER_CREDENTIALS = 'dockerhub-credentials'
+        IMAGE_TAG = "${BUILD_NUMBER}"
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                // Simple checkout - works with most configurations
+                checkout scm
+            }
+        }
+        
+        stage('Build Services') {
+            steps {
+                script {
+                    def services = ['eureka-server', 'api-gateway', 'quiz-feedback-service', 'ai-service']
+                    
+                    for (service in services) {
+                        echo "Building ${service}..."
+                        dir("backend/${service}") {
+                            sh 'mvn clean package -DskipTests=true'
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    docker.withRegistry('', DOCKER_CREDENTIALS) {
+                        def services = ['eureka-server', 'api-gateway', 'quiz-feedback-service', 'ai-service']
+                        
+                        for (service in services) {
+                            dir("backend/${service}") {
+                                def image = docker.build("${DOCKERHUB_USER}/${service}:${IMAGE_TAG}")
+                                image.push()
+                                image.push("latest")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo '✅ Pipeline completed successfully!'
+            echo "Images pushed to Docker Hub with tag: ${IMAGE_TAG}"
+        }
+        failure {
+            echo '❌ Pipeline failed - check the logs above'
+        }
+        always {
+            cleanWs()
+        }
+    }
+}
