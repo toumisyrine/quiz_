@@ -87,22 +87,6 @@ services:
       retries: 3
       start_period: 60s
 
-  # Frontend Angular
-  frontend:
-    image: syrinaaa/frontend:latest
-    container_name: frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - api-gateway
-    networks:
-      - microservices-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
   # MySQL Database
   mysql-db:
     image: mysql:8.0
