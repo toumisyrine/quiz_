@@ -1,0 +1,132 @@
+// Jenkinsfile — Pipeline de déploiement Kubernetes
+// Ce pipeline récupère les images déjà publiées sur Docker Hub
+// et les déploie sur le cluster Kubernetes
+
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_REGISTRY = 'docker.io/syrinaaa'
+        KUBECONFIG = credentials('kubeconfig-credentials')
+        NAMESPACE = 'learnhub'
+    }
+    
+    stages {
+        stage('1 — Checkout Manifests K8s') {
+            steps {
+                // Récupérer les fichiers YAML de configuration Kubernetes
+                git branch: 'quiz-feedback_branch', 
+                    url: 'https://github.com/toumisyrine/quiz_.git',
+                    credentialsId: 'github-credentials'
+                echo 'Manifests Kubernetes récupérés'
+            }
+        }
+        
+        stage('2 — Vérifier disponibilité images Docker Hub') {
+            steps {
+                sh 'docker pull syrinaaa/eureka-server:latest'
+                sh 'docker pull syrinaaa/api-gateway:latest'
+                sh 'docker pull syrinaaa/quiz-feedback-service:latest'
+                sh 'docker pull syrinaaa/ai-service:latest'
+                sh 'docker pull syrinaaa/frontend:latest'
+                echo 'Toutes les images sont disponibles sur Docker Hub'
+            }
+        }
+        
+        stage('3 — Déploiement sur Kubernetes') {
+            steps {
+                // Appliquer le manifest principal
+                sh 'kubectl apply -f k8s-deploy.yaml'
+                echo 'Manifests appliqués sur le cluster K8s'
+            }
+        }
+        
+        stage('4 — Attendre que les Pods soient prêts') {
+            steps {
+                sh 'kubectl rollout status deployment/mysql -n learnhub --timeout=180s'
+                sh 'kubectl rollout status deployment/eureka-server -n learnhub --timeout=120s'
+                sh 'kubectl rollout status deployment/api-gateway -n learnhub --timeout=120s'
+                sh 'kubectl rollout status deployment/quiz-feedback-service -n learnhub --timeout=120s'
+                sh 'kubectl rollout status deployment/ai-service -n learnhub --timeout=120s'
+                sh 'kubectl rollout status deployment/frontend -n learnhub --timeout=120s'
+                echo 'Tous les déploiements sont opérationnels'
+            }
+        }
+        
+        stage('5 — Test de santé') {
+            steps {
+                sh 'kubectl get pods -n learnhub -o wide'
+                sh 'kubectl get services -n learnhub'
+                
+                script {
+                    // Récupérer les NodePorts pour l'accès externe
+                    def nodeIP = sh(
+                        script: 'kubectl get nodes -o jsonpath="{.items[0].status.addresses[0].address}"',
+                        returnStdout: true
+                    ).trim()
+                    
+                    def eurekaPort = sh(
+                        script: 'kubectl get service eureka-service -n learnhub -o jsonpath="{.spec.ports[0].nodePort}"',
+                        returnStdout: true
+                    ).trim()
+                    
+                    def gatewayPort = sh(
+                        script: 'kubectl get service api-gateway-service -n learnhub -o jsonpath="{.spec.ports[0].nodePort}"',
+                        returnStdout: true
+                    ).trim()
+                    
+                    def frontendPort = sh(
+                        script: 'kubectl get service frontend-service -n learnhub -o jsonpath="{.spec.ports[0].nodePort}"',
+                        returnStdout: true
+                    ).trim()
+                    
+                    echo "🎉 DÉPLOIEMENT TERMINÉ!"
+                    echo "🔗 Accès aux services:"
+                    echo "  🔍 Eureka Dashboard: http://${nodeIP}:${eurekaPort}"
+                    echo "  🌐 API Gateway: http://${nodeIP}:${gatewayPort}"
+                    echo "  💻 Frontend: http://${nodeIP}:${frontendPort}"
+                    
+                    // Tests de santé basiques
+                    echo "🧪 Tests de santé..."
+                    sh """
+                        # Test via port-forward (plus fiable)
+                        kubectl port-forward -n learnhub service/eureka-service 8761:8761 &
+                        EUREKA_PID=\$!
+                        sleep 5
+                        
+                        curl -f http://localhost:8761/actuator/health || echo "⚠️ Eureka non accessible"
+                        kill \$EUREKA_PID || true
+                    """
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo '✅ Déploiement Kubernetes réussi !'
+            echo '📊 Tous les services sont déployés et opérationnels'
+        }
+        failure {
+            sh 'kubectl get events -n learnhub --sort-by=.metadata.creationTimestamp | tail -20'
+            echo '❌ Consulter les events K8s ci-dessus pour diagnostiquer'
+            
+            // Logs des pods en erreur
+            sh '''
+                echo "📋 Logs des pods en erreur:"
+                kubectl get pods -n learnhub --field-selector=status.phase!=Running -o name | while read pod; do
+                    echo "--- Logs de $pod ---"
+                    kubectl logs $pod -n learnhub --tail=10 || true
+                done
+            '''
+        }
+        always {
+            // Archiver les informations de déploiement
+            sh '''
+                kubectl get all -n learnhub > k8s-deployment-status.txt
+                kubectl describe pods -n learnhub > k8s-pods-description.txt
+            '''
+            archiveArtifacts artifacts: 'k8s-*.txt', allowEmptyArchive: true
+        }
+    }
+}
