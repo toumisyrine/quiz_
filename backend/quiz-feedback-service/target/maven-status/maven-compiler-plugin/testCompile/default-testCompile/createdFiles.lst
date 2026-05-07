@@ -1,0 +1,5 @@
+com\elearning\quiz\controller\FeedbackControllerTest.class
+com\elearning\quiz\service\QuizAttemptServiceImplTest.class
+com\elearning\quiz\controller\QuizControllerTest.class
+com\elearning\quiz\service\FeedbackServiceImplTest.class
+com\elearning\quiz\service\QuizServiceImplTest.class
