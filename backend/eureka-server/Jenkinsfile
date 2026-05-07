@@ -11,6 +11,7 @@ pipeline {
         SERVICE_NAME = 'eureka-server'
         SERVICE_PORT = '8761'
         IMAGE_TAG = "${BUILD_NUMBER}"
+        SONAR_AUTH_TOKEN = credentials('sonar-token')
     }
     
     stages {
@@ -31,19 +32,7 @@ pipeline {
                 }
             }
         }
-        stage('SonarQube Analysis') {
-    steps {
-        withSonarQubeEnv('sonarqube') {
-            sh '''
-                mvn sonar:sonar \
-                  -Dsonar.projectKey=eureka-server \
-                  -Dsonar.projectName=eureka-server \
-                  -Dsonar.host.url=http://localhost:9000 \
-                  -Dsonar.token=$SONAR_AUTH_TOKEN
-            '''
-        }
-    }
-}
+
         stage('Run Tests') {
             steps {
                 dir('backend/eureka-server') {
@@ -64,13 +53,13 @@ pipeline {
                 dir('backend/eureka-server') {
                     script {
                         try {
-                            withSonarQubeEnv('SonarQube') {
+                            withSonarQubeEnv('sonarqube') {
                                 sh '''
                                     mvn sonar:sonar \
                                       -Dsonar.projectKey=eureka-server \
                                       -Dsonar.projectName="Eureka Server" \
-                                      -Dsonar.host.url=$SONAR_HOST_URL \
-                                      -Dsonar.login=$SONAR_AUTH_TOKEN
+                                      -Dsonar.host.url=http://localhost:9000 \
+                                      -Dsonar.token=$SONAR_AUTH_TOKEN
                                 '''
                             }
                             echo '✅ SonarQube analysis completed'
@@ -108,16 +97,13 @@ pipeline {
             steps {
                 dir('backend/eureka-server') {
                     script {
-                        // Login to Docker Hub
                         withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                             sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
                         }
                         
-                        // Build images only (no push for testing)
                         sh "docker build -t ${DOCKERHUB_USER}/${SERVICE_NAME}:${IMAGE_TAG} ."
                         echo "✅ Docker image built successfully: ${DOCKERHUB_USER}/${SERVICE_NAME}:${IMAGE_TAG}"
                         
-                        // Try to push with better error handling
                         try {
                             sh "docker push ${DOCKERHUB_USER}/${SERVICE_NAME}:${IMAGE_TAG}"
                             sh "docker tag ${DOCKERHUB_USER}/${SERVICE_NAME}:${IMAGE_TAG} ${DOCKERHUB_USER}/${SERVICE_NAME}:latest"
@@ -129,7 +115,6 @@ pipeline {
                             echo "📦 Docker image built locally: ${DOCKERHUB_USER}/${SERVICE_NAME}:${IMAGE_TAG}"
                         }
                         
-                        // Logout
                         sh 'docker logout'
                     }
                 }
