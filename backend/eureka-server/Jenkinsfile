@@ -31,7 +31,19 @@ pipeline {
                 }
             }
         }
-        
+        stage('SonarQube Analysis') {
+    steps {
+        withSonarQubeEnv('sonarqube') {
+            sh '''
+                mvn sonar:sonar \
+                  -Dsonar.projectKey=eureka-server \
+                  -Dsonar.projectName=eureka-server \
+                  -Dsonar.host.url=http://localhost:9000 \
+                  -Dsonar.token=$SONAR_AUTH_TOKEN
+            '''
+        }
+    }
+}
         stage('Run Tests') {
             steps {
                 dir('backend/eureka-server') {
