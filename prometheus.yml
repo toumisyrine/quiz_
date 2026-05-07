@@ -3,7 +3,6 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
-
   - job_name: 'eureka-server'
     metrics_path: '/actuator/prometheus'
     static_configs:
@@ -12,12 +11,12 @@ scrape_configs:
   - job_name: 'api-gateway'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['192.168.56.10:8080']
+      - targets: ['192.168.56.10:8888']  # Port corrigé: 8888 au lieu de 8080
 
   - job_name: 'quiz-feedback-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['192.168.56.10:8082']
+      - targets: ['192.168.56.10:8089']  # Port corrigé: 8089 au lieu de 8082
 
   - job_name: 'ai-service'
     metrics_path: '/actuator/prometheus'
